@@ -12,7 +12,7 @@ The script will generate 5 random brains in `brains-space/`and `brains-matrix/`a
 
 ## Brain-Alignment Computation
 
-To align the brains of “animal1” and “animal2” the corresponding files `brains-space/animal1.txt` and `brains-matrix/animal1.txt` must exist. The alignment will consider as distance the linear combination $a x Euclidean + b x StrongestEdge$. To align the brains, run for example:
+To align the brains of “animal1” and “animal2” the corresponding files `brains-space/animal1.txt` and `brains-matrix/animal1.txt` must exist. The alignment will consider as distance the linear combination $a \cdot Euclidean + b \cdot StrongestEdge$. To align the brains, run for example:
 
 ```python3 brain-alignment.py -a1 animal1 -a2 animal2 -n 200 -d 90 -r 200 -a 1 -b 1 -s```
 
