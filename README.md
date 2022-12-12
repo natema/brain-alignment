@@ -2,6 +2,8 @@
 
 Implementation of methods to compute various brain similarity measures across animal species.
 
+It requires `python3.7+` as well as `numpy, scipy`.
+
 ## Random Data Generation
 
 Run `python3 utils/generate-random-data.py` to generate random data to play with the alignment.
