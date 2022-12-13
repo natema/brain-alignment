@@ -2,7 +2,7 @@
 
 Implementation of methods to compute various brain similarity measures across animal species.
 
-It requires `python3.7+` as well as `numpy, scipy`.
+It requires `python3.7+` as well as `numpy, scipy`.
 
 ## Random Data Generation
 
@@ -12,12 +12,30 @@ The script will generate 5 random brains in `brains-space/`and `brains-matrix/`a
 
 ## Brain-Alignment Computation
 
-To align the brains of “animal1” and “animal2” the corresponding files `brains-space/animal1.txt` and `brains-matrix/animal1.txt` must exist. The alignment will consider as distance the linear combination $a \cdot Euclidean + b \cdot StrongestEdge$. To align the brains, run for example:
+The alignment will consider as distance the linear combination $A \cdot Euclidean + B \cdot StrongestEdge$, for $A,B \in \mathbb{R^+}$. Execute the following command for all the options:
 
-```python3 brain-alignment.py -a1 animal1 -a2 animal2 -n 200 -d 90 -r 200 -a 1 -b 1 -s```
+```python3 brain-alignment.py -h```
 
-where: `-a1` is the name of animal1; `-a2` is the name of animal2; `-n` is the number of points used to represent the animals (200 in our experiments); `-d` is the degrees of the canonical rotations (90 in our experiments); `-r` is the number of small random rotations (200 in our experiments); `-a` is the coefficient of Euclidean distance; `-b` is the coefficient of StrongestEdge distance; `-s` is an optional flag to save the alignment to file.
+For example, to align the brains of “animal1” and “animal2” run:
 
-The output is saved in `distance/{animal1}_vs_{animal2}.pickle` (distance) and `alignment/{animal1}_vs_{animal2}.pickle` (alignment). The data is serialized using Pickle.
+```python3 brain-alignment.py -a1 animal1 -a2 animal2```
 
-In order to generate the pairwise distance matrix, one must execute all pairwise distances. By running `python3 utils/generate-parallel-distance.py` a file `parallel_distance.txt` is created/ The file contains the list of commands to be run to compute the pairwise alignments (all commands can be run in parallel). Once all distances have been computed, one can aggregate the data and create the pairwise distance matrix `distance_matrix.csv` by running `python3 utils/aggregate-distances.py`.
+Note that the files `brains-space/animal1.txt` and `brains-matrix/animal1.txt` must exist for the script to run correctly.
+
+The script requires the following flags:
+
+* `-a1`, the name of animal1; 
+* `-a2`, the name of animal2;
+
+The script accepts the following optional flags:
+
+* `-n`, the number of points used to represent the animals (default: 200);
+* `-d`, the degrees of the canonical rotations (default: 90);
+* `-r`, the number of small random rotations (default: 150);
+* `-a`, the coefficient of Euclidean distance (default: 1); 
+* `-b`, the coefficient of StrongestEdge distance (default: 1); 
+* `-s`, use option to save the alignment to file (default: alignment not saved to file).
+
+The output is saved in `distance/{animal1}_vs_{animal2}.pickle` (distance) and `alignment/{animal1}_vs_{animal2}.pickle` (alignment, optionally). The data is serialized using Pickle.
+
+In order to generate the pairwise distance matrix, one must execute all pairwise distances. By running `python3 utils/generate-parallel-distance.py` a file `parallel_distance.txt` is created. The file contains the list of commands to be run to compute the pairwise alignments (all commands can be run in parallel). Once all distances have been computed, one can aggregate the data and create the pairwise distance matrix `distance_matrix.csv` by running `python3 utils/aggregate-distances.py`.
