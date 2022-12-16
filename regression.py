@@ -1,171 +1,127 @@
-# R^2 test
-
-#%%
-
-import numpy as np 
-import random as rand
+import numpy as np
+import sys 
+import argparse
 import matplotlib.pyplot as plt
-import matplotlib.cm as cm
-from collections import defaultdict
+import os 
 
-def myflatten(distMat):
-    (a,b) = np.shape(distMat)
-    newmat = []
-    for i in range(a):
-        newline = []
-        for j in range(b):
-            if i != j:
-                newline += [distMat[i,j]]
-        newmat += [newline]
-    newmat = np.array(newmat)
-    return newmat.flatten()
+def myflatten(dissMat, n):
+    N = n*(n-1)
+    var = np.zeros(N, dtype=float)
+    for i in range(n):
+        for j in range(n):
+            tmp = i*(n-1)
+            var[tmp:tmp+n-1] = dissMat[i,list(range(i))+list(range(i+1,n))]
+    return (var, N)
 
-#%% 
+def standardizeVariable(var, n):
+    var = var - np.mean(var)
+    return np.divide(var, np.std(var))
 
-tgtvarinput = './NaiveMatchingCHAlignment_pruned_pruned_pruned_merged.csv'
+def getDissMat(path):
+    tgtDissMat = np.genfromtxt(path, dtype=float, skip_header=1, delimiter=",")
+    tgtDissMat = tgtDissMat[0:,1:]
+    (n,m) = np.shape(tgtDissMat)
+    if n != m:
+        sys.error("The target dissimilarity matrix is not a square matrix")
+    return (tgtDissMat, n)
 
-tgtvar = np.genfromtxt(tgtvarinput, dtype = float, skip_header=1,delimiter=',')
-tgtvar = np.copy(tgtvar[0:,1:])
+def getTgtVar(tgtDissMat, n):    
+    (tgtVar, N) = myflatten(tgtDissMat, n)
+    avg = np.mean(tgtVar)
+    tgtVar = tgtVar - avg
+    std = np.std(tgtVar)
+    ## we also centralize the dissimilarity matrix and divide by std: it is useful for the permutation test
+    return (np.divide(tgtVar, std), np.divide(tgtDissMat - avg, std), N) 
 
-n = (np.shape(tgtvar))[0]
+def getExpRegMat(paths, numExpVars, N):
+    expRegMat = np.zeros((N, numExpVars), dtype=float)
+    for i in range(numExpVars):
+        (expDissMat, n) = getDissMat(paths[i])
+        (expVar, N) = myflatten(expDissMat, n)
+        expRegMat[:,i] = standardizeVariable(expVar, N)
+    return expRegMat
 
-whichones = [1]
-numexp = len(whichones)
+def computeRsquare(tgtVar, expRegMat, regCoeffs, N):
+    tgtPred = expRegMat @ regCoeffs
+    RSS = 0 # initializing sum of squared residuals
+    TSS = 0 # initializing sum of total squares
+    for i in range(N):
+        RSS = RSS + (tgtPred[i] - tgtVar[i])**2
+        TSS = TSS + tgtVar[i]**2 # the variable is standardized: it's avarage is 0
+    return 1 - RSS/TSS
 
-expvarinput = "./expvar"
+def permTest(tgtDissMat, expRegMat, coeffMat, numPerm, n, N):
+    #coeffLst = np.zeros((numPerm,numExpVars))
+    rsquareLst = np.zeros(numPerm)
+    idMat = np.eye(n)
+    for i in range(0, numPerm):
+        permutation = idMat[np.random.permutation(range(0,n)),:]
+        permTgtDissMat = permutation.T @ np.copy(tgtDissMat) @ permutation
 
-newlength = int(n*(n-1))
+        (tgtVar, N) = myflatten(permTgtDissMat, n) # already standardized
 
-expmat = np.zeros((newlength, numexp), dtype = float)
+        regCoeffs = coeffMat @ tgtVar
+        #coeffLst[i,:] = regCoeffs
+        rsquareLst[i] = computeRsquare(tgtVar, expRegMat, regCoeffs, N)
+    return rsquareLst
 
-for i in range(0,numexp):
-    
-    expvar = np.genfromtxt(expvarinput+"_jumpchain{}.csv".format(whichones[i]), dtype = float, skip_header = 1,delimiter=',')
-    expvar = np.copy(expvar[0:,1:])
-    # if i == 10:
-    #     for k in range(np.shape(expvar)[0]):
-    #         for h in range(np.shape(expvar)[0]):
-    #             expvar[k,h] = expvar[k,h]**(1/3)
-    #expvar = np.divide(expvar, np.linalg.norm(expvar))
-    expvarflat=np.copy(myflatten(expvar))
-    expvarflat = expvarflat - expvarflat.mean()
-    expvarflat = np.divide(expvarflat,np.std(expvarflat))
-    expmat[:,i] = np.copy(expvarflat)
+def pvalueComputation(rsquareLst, n):
+    rsquare = rsquareLst[0]
+    rsquareLst = np.sort(rsquaresLst)
+    index = np.searchsorted(rsquareLst,rsquare)
+    return 2*min((index+1)/n, 1-index/n)
 
+def saveRegOutput(regCoeffs, rsquare, pvalue, numExpVars):
+    mystr = "Regression results\nY = "
+    for i in range(numExpVars):
+        mystr = mystr + f"{regCoeffs[i]}*X_{i} +"
+    mystr = mystr[0:-2] + "\n"
+    mystr = mystr + f"rsquare = {rsquare}\np-value = {pvalue}"
+    with open("regression-result/regression-output.txt", "w") as f:
+        f.write(mystr)
+    return
 
+def pltCorr(Y, Xmat, n):
+    for i in range(n):
+        X = Xmat[:,i]
+        p = plt.scatter(X,Y)
+        plt.xlabel(f"explanatory variable {i+1}")
+        plt.ylabel("target variable")
+        plt.savefig(f"regression-result/plt-x{i+1}-y.png")
+        plt.close()
+    return
 
+def addSuffix(args):
+    suffix = ".csv"
+    args.target = args.target + suffix
+    args.explanatory = [x + suffix for x in args.explanatory]
+    return args
 
-myprod = np.linalg.inv(expmat.T @ expmat)
-#%%
-tgtvarflat = np.copy(myflatten(tgtvar))
-meantgtvarflat = tgtvarflat.mean()
-tgtvarflat = tgtvarflat - meantgtvarflat
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description="Multivariate Linear Regression")
+    parser.add_argument("-t", "--target", type=str, metavar="Y", required=True, help="Target dissimilarity matrix in csv format: path without extension")
+    parser.add_argument("-e", "--explanatory", metavar="X", type=str, nargs="+", help="Explanatory dissimilarity matrix in csv format: path without extension")
+    parser.add_argument("-p", "--permutations", metavar="P", type=int, required=True, help="Number of permutations for the permutation test" )
+    args = parser.parse_args()
 
-stdtgtvarflat = np.std(tgtvarflat)
-tgtvarflat = np.divide(tgtvarflat,stdtgtvarflat)
-#print(np.sort(tgtvarflat))
-tgtvar = tgtvar - meantgtvarflat
-tgtvar = np.divide(tgtvar, stdtgtvarflat)
+    args = addSuffix(args)
 
-#%%
-# W = defaultdict(int)
-# for (x, y) in zip(expmat[:,0], tgtvarflat):
-#     W[(x, y)] += 1
-# cols = [W[(x, y)] for (x, y) in zip(expmat[:,0], tgtvarflat)]
+    (tgtDissMat, n) = getDissMat(args.target)
+    (tgtVar, tgtDissMat, N) = getTgtVar(tgtDissMat, n) # unfolds and standardizes the matrix
 
-# mycmap = cm.get_cmap("coolwarm")
-# plt.scatter(expmat[:,0], tgtvarflat, c=cols, cmap=mycmap)
-# plt.colorbar()
-# plt.savefig("./is_linear.png")
-#%%
+    numExpVars = len(args.explanatory)
+    expRegMat = getExpRegMat(args.explanatory, numExpVars, N) # unfolds and standardizes the matrices
 
-#print(tgtvarflat, expmat[:,0])
+    coeffMat = np.linalg.inv(expRegMat.T @ expRegMat) @ expRegMat.T
+    regCoeffs = coeffMat @ tgtVar
 
-regcoeff = myprod @ expmat.T @ tgtvarflat
+    rsquaresLst = np.zeros(args.permutations+1)
+    rsquaresLst[0] = computeRsquare(tgtVar, expRegMat, regCoeffs, N)
+    rsquaresLst[1:] = permTest(tgtDissMat, expRegMat, coeffMat, args.permutations, n, N)
+    pvalue = pvalueComputation(rsquaresLst, args.permutations+1)
 
-print("\nReg. coefficients are {}".format(regcoeff))
+    print(pvalue)
 
-regpred = expmat @ regcoeff
-
-newlength = len(tgtvarflat)
-
-#print("\nnewlength = {}\n".format(newlength))
-
-
-myaverage = 0
-for j in range(0,newlength):
-    myaverage += tgtvarflat[j]
-myaverage /= newlength
-
-RSS = 0
-SStot = 0
-
-for j in range(0,newlength):
-    RSS += (regpred[j] - tgtvarflat[j])**2
-    SStot += (tgtvarflat[j]-myaverage)**2
-
-
-numperm = 10**3
-
-Rsquares = np.zeros((numperm+1))
-Rsquares[0] = 1 - RSS / SStot
-
-print("R^2 = {}\naverage = {}\nRSS = {}\nSStot = {}\n".format(Rsquares[0],myaverage,RSS,SStot))
-
-print("mantel test with first expvar yields {}".format(np.dot(tgtvarflat,expmat[:,0])/(np.linalg.norm(tgtvarflat)*np.linalg.norm(expmat[:,0]))))
-
-# for i in range(0,newlength):
-#     print(tgtvarflat[i])
-
-permcoeffs = np.zeros((numperm+1,numexp))
-
-
-myid = np.eye(n)
-
-for count in range(0, numperm):
-    # if np.mod(count,100) == 0:
-    #         print("{}\n".format(count))
-    permtgtvar = np.copy(tgtvar)
-    #print("\npermutation number {}\n".format(count))
-    myperm = myid[np.random.permutation(range(0,n)),:]
-    permtgtvar = myperm.T @ permtgtvar @ myperm
-
-    
-    permtgtvarflat = np.copy(myflatten(permtgtvar))
-    #print(np.sort(permtgtvarflat))
-    #print(np.linalg.norm(permtgtvarflat))
-
-
-    #permtgtvarflat = np.divide(permtgtvarflat, np.linalg.norm(permtgtvarflat))
-    #print(np.sort(permtgtvarflat))
-
-
-    permcoeff = myprod @ expmat.T @ permtgtvarflat
-
-
-    permcoeffs[count+1,:] = np.copy(permcoeff)
-
-    permpred = expmat @ permcoeff
-
-    RSS = 0
-    #SStot = 0
-    #for j in range(0,newlength):
-    #    myaverage += permtgtvarflat[j]
-    #myaverage /= newlength
-    for j in range(0,newlength):
-        RSS += ( permpred[j] - permtgtvarflat[j])**2
-        #SStot += (permtgtvarflat[j] - myaverage)**2
-
-    #print(SStot)
-
-    Rsquares[count+1] =1- RSS/SStot
-
-Rsquare = Rsquares[0]
-sortedRsquares = np.sort(Rsquares)
-
-print("\nR^2 stat = {}; its p-value is {}\n".format(Rsquare,np.min([1 - (np.searchsorted(sortedRsquares,Rsquare))/numperm,(np.searchsorted(sortedRsquares,Rsquare))/numperm])+1/numperm))
-# %%
-
-# %%
-
-# %%
+    os.makedirs("regression-result", exist_ok=True)
+    saveRegOutput(regCoeffs, rsquaresLst[0], pvalue, numExpVars)
+    pltCorr(tgtVar, expRegMat, numExpVars)
