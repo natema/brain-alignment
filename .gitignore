@@ -1,2 +1,4 @@
-# we don't commit all .csv files
-.csv
+# what not to commit
+*.csv
+*.txt
+*.pickle
