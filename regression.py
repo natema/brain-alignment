@@ -72,9 +72,9 @@ def pvalueComputation(rsquareLst, n):
     return 2*min((index+1)/n, 1-index/n)
 
 def saveRegOutput(regCoeffs, rsquare, pvalue, numExpVars):
-    mystr = "Regression results\nY = "
+    mystr = "Regression results\nY ="
     for i in range(numExpVars):
-        mystr = mystr + f"{regCoeffs[i]}*X_{i} +"
+        mystr = mystr + f" {regCoeffs[i]}*X_{i} +"
     mystr = mystr[0:-2] + "\n"
     mystr = mystr + f"rsquare = {rsquare}\np-value = {pvalue}"
     with open("regression-result/regression-output.txt", "w") as f:
