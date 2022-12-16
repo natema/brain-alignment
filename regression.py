@@ -13,32 +13,28 @@ def myflatten(dissMat, n):
             var[tmp:tmp+n-1] = dissMat[i,list(range(i))+list(range(i+1,n))]
     return (var, N)
 
-def standardizeVariable(var, n):
-    var = var - np.mean(var)
-    return np.divide(var, np.std(var))
+def centerVariable(var, avg):
+    return var - avg
 
-def getDissMat(path):
-    tgtDissMat = np.genfromtxt(path, dtype=float, skip_header=1, delimiter=",")
-    tgtDissMat = tgtDissMat[0:,1:]
-    (n,m) = np.shape(tgtDissMat)
+def normalizeVariable(var, c):
+    return np.divide(var, c)
+
+def getDissMat(path): # returns both matrix and unfolded matrix, standardized
+    DissMat = np.genfromtxt(path, dtype=float, skip_header=1, delimiter=",")
+    DissMat = DissMat[0:,1:]
+    (n,m) = np.shape(DissMat)
     if n != m:
         sys.error("The target dissimilarity matrix is not a square matrix")
-    return (tgtDissMat, n)
-
-def getTgtVar(tgtDissMat, n):    
-    (tgtVar, N) = myflatten(tgtDissMat, n)
-    avg = np.mean(tgtVar)
-    tgtVar = tgtVar - avg
-    std = np.std(tgtVar)
-    ## we also centralize the dissimilarity matrix and divide by std: it is useful for the permutation test
-    return (np.divide(tgtVar, std), np.divide(tgtDissMat - avg, std), N) 
+    (Var, N) = myflatten(DissMat, n)
+    avg = np.mean(Var)
+    std = np.std(Var)
+    return (normalizeVariable(centerVariable(DissMat,avg),std), normalizeVariable(centerVariable(Var,avg),std), n, N)
 
 def getExpRegMat(paths, numExpVars, N):
     expRegMat = np.zeros((N, numExpVars), dtype=float)
     for i in range(numExpVars):
-        (expDissMat, n) = getDissMat(paths[i])
-        (expVar, N) = myflatten(expDissMat, n)
-        expRegMat[:,i] = standardizeVariable(expVar, N)
+        (expDissMat, expVar, n, N) = getDissMat(paths[i])
+        expRegMat[:,i] = expVar
     return expRegMat
 
 def computeRsquare(tgtVar, expRegMat, regCoeffs, N):
@@ -106,8 +102,7 @@ if __name__ == "__main__":
 
     args = addSuffix(args)
 
-    (tgtDissMat, n) = getDissMat(args.target)
-    (tgtVar, tgtDissMat, N) = getTgtVar(tgtDissMat, n) # unfolds and standardizes the matrix
+    (tgtDissMat, tgtVar, n, N) = getDissMat(args.target)
 
     numExpVars = len(args.explanatory)
     expRegMat = getExpRegMat(args.explanatory, numExpVars, N) # unfolds and standardizes the matrices
@@ -119,8 +114,6 @@ if __name__ == "__main__":
     rsquaresLst[0] = computeRsquare(tgtVar, expRegMat, regCoeffs, N)
     rsquaresLst[1:] = permTest(tgtDissMat, expRegMat, coeffMat, args.permutations, n, N)
     pvalue = pvalueComputation(rsquaresLst, args.permutations+1)
-
-    print(pvalue)
 
     os.makedirs("regression-result", exist_ok=True)
     saveRegOutput(regCoeffs, rsquaresLst[0], pvalue, numExpVars)
