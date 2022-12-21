@@ -1,7 +1,6 @@
 import numpy as np
 import sys 
 import argparse
-import matplotlib.pyplot as plt
 import os 
 
 def myflatten(dissMat, n):
