@@ -197,9 +197,9 @@ if __name__ == "__main__":
         regCoeffs = coeffMat @ tgtVar
         mystr = mystr + addCoeffOutput(regCoeffs, numExpVars, ftestRound, explInputs)
 
-        (expRegMat, indeces, control) = rmNegExpVar(expRegMat, regCoeffs, numExpVars)
+        (expRegMat, indeces, control) = rmNegExpVar(expRegMat, regCoeffs, numExpVars) # removing variables for negative correlations
 
-        while control == True:
+        while control == True: # cycling until there are no more negative correlations
             explInputs = [explInputs[i] for i in indeces]
             coeffMat = np.linalg.inv(expRegMat.T @ expRegMat) @ expRegMat.T
             regCoeffs = coeffMat @ tgtVar
