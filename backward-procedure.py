@@ -232,4 +232,5 @@ if __name__ == "__main__":
 
     os.makedirs("backward-procedure-results", exist_ok=True)
     saveBackwardProcOutput(mystr)
+    print("Output saved in folder 'backward-procedure-results'")
 

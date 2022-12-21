@@ -50,7 +50,11 @@ def permTest(tgtDissMat, expRegMat, coeffMat, numPerm, n, N):
     #coeffLst = np.zeros((numPerm,numExpVars))
     rsquareLst = np.zeros(numPerm)
     idMat = np.eye(n)
+    tmp = int(np.sqrt(numPerm))
+    print(f"Counting permutations modulo {tmp}")
     for i in range(0, numPerm):
+        if i%tmp==tmp-1:
+            print(f"Permutation number {i+1}")
         permutation = idMat[np.random.permutation(range(0,n)),:]
         permTgtDissMat = permutation.T @ np.copy(tgtDissMat) @ permutation
 
@@ -73,6 +77,7 @@ def saveRegOutput(regCoeffs, rsquare, pvalue, numExpVars):
         mystr = mystr + f" {regCoeffs[i]}*X_{i} +"
     mystr = mystr[0:-2] + "\n"
     mystr = mystr + f"rsquare = {rsquare}\np-value = {pvalue}"
+    print(mystr)
     with open("regression-result/regression-output.txt", "w") as f:
         f.write(mystr)
     return
@@ -99,6 +104,8 @@ if __name__ == "__main__":
     parser.add_argument("-e", "--explanatory", metavar="X", type=str, nargs="+", help="Explanatory dissimilarity matrix in csv format: path without extension")
     parser.add_argument("-p", "--permutations", metavar="P", type=int, required=True, help="Number of permutations for the permutation test" )
     args = parser.parse_args()
+
+    print("Running regression with permutation test")
 
     args = addSuffix(args)
 
