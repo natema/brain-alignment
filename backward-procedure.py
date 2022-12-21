@@ -75,7 +75,7 @@ def permFtests(tgtDissMat, expRegMat, coeffMats, restrictedExpMats, restrictedCo
     ftestLst = np.zeros((numPerm,numExpVars))
     idMat = np.eye(n)
     tmp = int(np.sqrt(numPerm))
-    print(f"Counting permutation modulo {tmp}")
+    print(f"Counting permutations modulo {tmp}")
     for i in range(0, numPerm):
         if i%tmp==tmp-1:
             print(f"Permutation number {i+1}")
