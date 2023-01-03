@@ -106,7 +106,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Multivariate Linear Regression")
     parser.add_argument("-t", "--target", type=str, metavar="Y", required=True, help="Target dissimilarity matrix in csv format: name of the file without extension. The file must be in the folder 'target-matrices'")
     parser.add_argument("-e", "--explanatory", metavar="X", type=str, nargs="+", help="Explanatory dissimilarity matrix in csv format: name of the file without extension. The file must be in the folder 'explanatory-matrices'")
-    parser.add_argument("-p", "--permutations", metavar="P", type=int, required=True, help="Number of permutations for the permutation test" )
+    parser.add_argument("-p", "--permutations", metavar="P", type=int, default=999, help="Number of permutations for the permutation test" )
     args = parser.parse_args()
 
     print("Running regression with permutation test")
