@@ -54,7 +54,7 @@ Execute the following command for a summary of the script functionalities:
 
 Code example:
 
-```python3 prune.py y-raw```
+```python3 prune.py -t y-raw```
 
 ## Merging species in pruned dissimilarity matrices
 
@@ -70,7 +70,7 @@ Execute the following command for a summary of the script functionalities:
 
 Code example (after having performed the pruning code example):
 
-```python3 merge-species.py pruned-y-raw```
+```python3 merge-species.py -t pruned-y-raw```
 
 ## Backward elimination procedure
 
