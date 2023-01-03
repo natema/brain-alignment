@@ -24,7 +24,7 @@ def getDissMat(path): # returns both matrix and unfolded matrix, standardized
     DissMat = DissMat[0:,1:]
     (n,m) = np.shape(DissMat)
     if n != m:
-        sys.error("The target dissimilarity matrix is not a square matrix")
+        raise TypeError("The target dissimilarity matrix is not a square matrix")
     (Var, N) = myflatten(DissMat, n)
     avg = np.mean(Var)
     std = np.std(Var)
@@ -47,21 +47,17 @@ def computeRsquare(tgtVar, expRegMat, regCoeffs, N):
     return 1 - RSS/TSS
 
 def permTest(tgtDissMat, expRegMat, coeffMat, numPerm, n, N):
-    #coeffLst = np.zeros((numPerm,numExpVars))
     rsquareLst = np.zeros(numPerm)
     idMat = np.eye(n)
     tmp = int(np.sqrt(numPerm))
-    print(f"Counting permutations modulo {tmp}")
+    print(f"Counting permutations modulo {tmp} = sqrt({numPerm})")
     for i in range(0, numPerm):
         if i%tmp==tmp-1:
             print(f"Permutation number {i+1}")
         permutation = idMat[np.random.permutation(range(0,n)),:]
-        permTgtDissMat = permutation.T @ np.copy(tgtDissMat) @ permutation
-
+        permTgtDissMat = permutation.T @ tgtDissMat @ permutation
         (tgtVar, N) = myflatten(permTgtDissMat, n) # already standardized
-
         regCoeffs = coeffMat @ tgtVar
-        #coeffLst[i,:] = regCoeffs
         rsquareLst[i] = computeRsquare(tgtVar, expRegMat, regCoeffs, N)
     return rsquareLst
 
@@ -71,24 +67,25 @@ def pvalueComputation(rsquareLst, n):
     index = np.searchsorted(rsquareLst,rsquare)
     return 2*min((index+1)/n, 1-index/n)
 
-def saveRegOutput(regCoeffs, rsquare, pvalue, numExpVars):
-    mystr = "Regression results\nY ="
+def saveRegOutput(regCoeffs, rsquare, pvalue, numExpVars, explInputs, folder):
+    mystr = "Regression results\ny ="
     for i in range(numExpVars):
-        mystr = mystr + f" {regCoeffs[i]}*X_{i} +"
+        mystr = mystr + f" {regCoeffs[i]}*{explInputs[i][21:-4]} +"
     mystr = mystr[0:-2] + "\n"
     mystr = mystr + f"rsquare = {rsquare}\np-value = {pvalue}"
     print(mystr)
-    with open("regression-result/regression-output.txt", "w") as f:
+    with open(f"{folder}/regression-output.txt", "w") as f:
         f.write(mystr)
+    print(f"Output saved in folder '{folder}'")
     return
 
-def pltCorr(Y, Xmat, n):
+def pltCorr(Y, Xmat, n, folder):
     for i in range(n):
         X = Xmat[:,i]
         p = plt.scatter(X,Y)
         plt.xlabel(f"explanatory variable {i+1}")
         plt.ylabel("target variable")
-        plt.savefig(f"regression-result/plt-x{i+1}-y.png")
+        plt.savefig(f"{folder}/plt-x{i+1}-y.png")
         plt.close()
     return
 
@@ -98,16 +95,24 @@ def addSuffix(args):
     args.explanatory = [x + suffix for x in args.explanatory]
     return args
 
+def addPrefix(args):
+    tgtPrefix = "target-matrices/"
+    explPrefix = "explanatory-matrices/"
+    args.target = tgtPrefix + args.target
+    args.explanatory = [explPrefix + x for x in args.explanatory]
+    return args
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Multivariate Linear Regression")
-    parser.add_argument("-t", "--target", type=str, metavar="Y", required=True, help="Target dissimilarity matrix in csv format: path without extension")
-    parser.add_argument("-e", "--explanatory", metavar="X", type=str, nargs="+", help="Explanatory dissimilarity matrix in csv format: path without extension")
+    parser.add_argument("-t", "--target", type=str, metavar="Y", required=True, help="Target dissimilarity matrix in csv format: name of the file without extension. The file must be in the folder 'target-matrices'")
+    parser.add_argument("-e", "--explanatory", metavar="X", type=str, nargs="+", help="Explanatory dissimilarity matrix in csv format: name of the file without extension. The file must be in the folder 'explanatory-matrices'")
     parser.add_argument("-p", "--permutations", metavar="P", type=int, required=True, help="Number of permutations for the permutation test" )
     args = parser.parse_args()
 
     print("Running regression with permutation test")
 
     args = addSuffix(args)
+    args = addPrefix(args)
 
     (tgtDissMat, tgtVar, n, N) = getDissMat(args.target)
 
@@ -122,6 +127,7 @@ if __name__ == "__main__":
     rsquaresLst[1:] = permTest(tgtDissMat, expRegMat, coeffMat, args.permutations, n, N)
     pvalue = pvalueComputation(rsquaresLst, args.permutations+1)
 
-    os.makedirs("regression-result", exist_ok=True)
-    saveRegOutput(regCoeffs, rsquaresLst[0], pvalue, numExpVars)
-    pltCorr(tgtVar, expRegMat, numExpVars)
+    folder = "regression-results"
+    os.makedirs(folder, exist_ok=True)
+    saveRegOutput(regCoeffs, rsquaresLst[0], pvalue, numExpVars, args.explanatory, folder)
+    pltCorr(tgtVar, expRegMat, numExpVars, folder)
