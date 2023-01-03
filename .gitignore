@@ -3,3 +3,8 @@
 *.txt
 *.pickle
 *.png
+# exceptions
+!*map-of-animals.csv
+!*target-matrices/*
+!*explanatory-matrices/*
+!*alignment-matrices/*
