@@ -79,13 +79,13 @@ def saveRegOutput(regCoeffs, rsquare, pvalue, numExpVars, explInputs, folder):
     print(f"Output saved in folder '{folder}'")
     return
 
-def pltCorr(Y, Xmat, n, folder):
+def pltCorr(Y, Xmat, n, explInputs, folder):
     for i in range(n):
         X = Xmat[:,i]
         p = plt.scatter(X,Y)
-        plt.xlabel(f"explanatory variable {i+1}")
+        plt.xlabel(f"explanatory variable {explInputs[i][21:-4]}")
         plt.ylabel("target variable")
-        plt.savefig(f"{folder}/plt-x{i+1}-y.png")
+        plt.savefig(f"{folder}/plt-{explInputs[i][21:-4]}-y.png")
         plt.close()
     return
 
@@ -130,4 +130,4 @@ if __name__ == "__main__":
     folder = "regression-results"
     os.makedirs(folder, exist_ok=True)
     saveRegOutput(regCoeffs, rsquaresLst[0], pvalue, numExpVars, args.explanatory, folder)
-    pltCorr(tgtVar, expRegMat, numExpVars, folder)
+    pltCorr(tgtVar, expRegMat, numExpVars, args.explanatory, folder)
