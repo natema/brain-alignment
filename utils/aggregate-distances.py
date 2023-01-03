@@ -20,7 +20,9 @@ if __name__ == "__main__":
             M[i, j] = distance
             M[j, i] = distance
 
-    with open("distance_matrix.csv", "w") as fo:
+    os.makedirs("alignment-matrices", exist_ok=True)
+
+    with open("dissimilarity-matrix.csv", "w") as fo:
         header = ",".join(animals)
         fo.write(f",{header}\n")
         for (i, animal1) in enumerate(animals):
