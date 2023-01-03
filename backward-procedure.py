@@ -115,15 +115,23 @@ def pvaluesCheck(pvalues, numExpVars, pToRemove):
         indeces = list(range(numExpVars))
     return (indeces, end)
 
-def saveBackwardProcOutput(mystr):
-    with open("backward-procedure-results/output.txt", "w") as f:
+def saveBackwardProcOutput(mystr, folder):
+    with open(f"{folder}/output.txt", "w") as f:
         f.write(mystr)
+    print(f"Output saved in folder '{folder}'")
     return
 
 def addSuffix(args):
     suffix = ".csv"
     args.target = args.target + suffix
     args.explanatory = [x + suffix for x in args.explanatory]
+    return args
+
+def addPrefix(args):
+    tgtPrefix = "target-matrices/"
+    explPrefix = "explanatory-matrices/"
+    args.target = tgtPrefix + args.target
+    args.explanatory = [explPrefix + x for x in args.explanatory]
     return args
 
 def initOutput(numPerm, pToRemove):
@@ -134,7 +142,7 @@ def initOutput(numPerm, pToRemove):
 def addCoeffOutput(regCoeffs, numExpVars, ftestRound, explInputs):
     mystr = f"Elimination round {ftestRound}: y ="
     for i in range(numExpVars):
-        mystr = mystr + f" {regCoeffs[i]}*{explInputs[i][0:-4]} +"
+        mystr = mystr + f" {regCoeffs[i]}*{explInputs[i][21:-4]} +"
     mystr = mystr[0:-2] + "\n"
     print(mystr)
     return mystr
@@ -142,7 +150,7 @@ def addCoeffOutput(regCoeffs, numExpVars, ftestRound, explInputs):
 def explRemOutput(regCoeffs, numExpVars, explInputs):
     mystr = "Removing negative correlations: y ="
     for i in range(numExpVars):
-        mystr = mystr + f" {regCoeffs[i]}*{explInputs[i][0:-4]} +"
+        mystr = mystr + f" {regCoeffs[i]}*{explInputs[i][21:-4]} +"
     mystr = mystr[0:-2] + "\n"
     print(mystr)
     return mystr
@@ -150,13 +158,13 @@ def explRemOutput(regCoeffs, numExpVars, explInputs):
 def addFtestsOutput(regCoeffs, ftests, pvalues, numExpVars, explInputs, indeces, end):
     mystr = "F-tests results:\n"
     for i in range(numExpVars):
-        mystr = mystr + f"Explanatory variable {explInputs[i][0:-4]}\t Coefficient {regCoeffs[i]}\tF-test {ftests[i]}\tp-value {pvalues[i]}\n"
+        mystr = mystr + f"Explanatory variable {explInputs[i][21:-4]}\t Coefficient {regCoeffs[i]}\tF-test {ftests[i]}\tp-value {pvalues[i]}\n"
     if end:
         mystr = mystr + "Completed: all remaining variables to keep\n"
     else:
         mystr = mystr + "To keep: "
         for x in indeces:
-            mystr = mystr + f"{explInputs[x][0:-4]} "
+            mystr = mystr + f"{explInputs[x][21:-4]} "
         mystr = mystr + "\n"
     mystr = mystr + "\n"
     print(mystr)
@@ -164,8 +172,8 @@ def addFtestsOutput(regCoeffs, ftests, pvalues, numExpVars, explInputs, indeces,
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Backward Elimination Procedure")
-    parser.add_argument("-t", "--target", type=str, metavar="Y", required=True, help="Target dissimilarity matrix in csv format: path without extension")
-    parser.add_argument("-e", "--explanatory", metavar="X", type=str, nargs="+", help="Explanatory dissimilarity matrix in csv format: path without extension")
+    parser.add_argument("-t", "--target", type=str, metavar="Y", required=True, help="Target dissimilarity matrix in csv format: name of the file without extension. The file must be in the folder 'target-matrices'")
+    parser.add_argument("-e", "--explanatory", metavar="X", type=str, nargs="+", help="Explanatory dissimilarity matrix in csv format: name of the file without extension. The file must be in the folder 'explanatory-matrices'")
     parser.add_argument("-p", "--permutations", metavar="P", type=int, required=True, help="Number of permutations for the permutation test" )
     parser.add_argument("-r", "--ptoremove", metavar="R", type=float, required=True, help="P-to-remove value for the backward elimination procedure" )
     
@@ -174,6 +182,8 @@ if __name__ == "__main__":
     mystr = initOutput(args.permutations, args.ptoremove)
 
     args = addSuffix(args)
+    args = addPrefix(args)
+
     (tgtDissMat, tgtVar, n, N) = getDissMat(args.target)
 
     explInputs = args.explanatory
@@ -229,7 +239,7 @@ if __name__ == "__main__":
 
         ftestRound = ftestRound + 1
 
-    os.makedirs("backward-procedure-results", exist_ok=True)
-    saveBackwardProcOutput(mystr)
-    print("Output saved in folder 'backward-procedure-results'")
+    folder = "backward-procedure-results"
+    os.makedirs(folder, exist_ok=True)
+    saveBackwardProcOutput(mystr, folder)
 
