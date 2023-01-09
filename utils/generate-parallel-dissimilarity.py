@@ -4,7 +4,7 @@ if __name__ == "__main__":
         for line in handle:
             animals.append(line.strip())
 
-    with open("parallel_distance.txt", "w") as handle:
+    with open("parallel_dissimilarity.txt", "w") as handle:
         for (i, animal1) in enumerate(animals):
             for (j, animal2) in enumerate(animals):
                 if j < i:

@@ -1,0 +1,10 @@
+# what not to commit
+*.csv
+*.txt
+*.pickle
+*.png
+# exceptions
+!*map-of-animals.csv
+!*target-matrices/*
+!*explanatory-matrices/*
+!*alignment-matrices/*

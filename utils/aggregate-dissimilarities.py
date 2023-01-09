@@ -15,12 +15,14 @@ if __name__ == "__main__":
         for (j, animal2) in enumerate(animals):
             if j < i:
                 continue
-            with open(os.path.join("distance", f"{animal1}_vs_{animal2}.pickle"), "rb") as handle:
+            with open(os.path.join("dissimilarity", f"{animal1}_vs_{animal2}.pickle"), "rb") as handle:
                 distance = pickle.load(handle)
             M[i, j] = distance
             M[j, i] = distance
 
-    with open("distance_matrix.csv", "w") as fo:
+    os.makedirs("alignment-matrices", exist_ok=True)
+
+    with open("dissimilarity-matrix.csv", "w") as fo:
         header = ",".join(animals)
         fo.write(f",{header}\n")
         for (i, animal1) in enumerate(animals):
