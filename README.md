@@ -12,7 +12,7 @@ The script will generate 5 random brains in `brains-space/`and `brains-matrix/`a
 
 ## Brain-Alignment Computation
 
-The alignment will consider as distance the linear combination $A \cdot Euclidean + B \cdot StrongestEdge$, for $A,B \in \mathbb{R^+}$. Execute the following command for all the options:
+The alignment will consider as dissimilarity the linear combination $A \cdot Euclidean + B \cdot StrongestEdge$, for $A,B \in \mathbb{R^+}$. Execute the following command for all the options:
 
 ```python3 brain-alignment.py -h```
 
@@ -32,13 +32,13 @@ The script accepts the following optional flags:
 * `-n`, the number of points used to represent the animals (default: 200);
 * `-d`, the degrees of the canonical rotations (default: 90);
 * `-r`, the number of small random rotations (default: 150);
-* `-a`, the coefficient of Euclidean distance (default: 1); 
-* `-b`, the coefficient of StrongestEdge distance (default: 1); 
+* `-a`, the coefficient of Euclidean dissimilarity (default: 1); 
+* `-b`, the coefficient of StrongestEdge dissimilarity (default: 1); 
 * `-s`, use option to save the alignment to file (default: alignment not saved to file).
 
-The output is saved in `distance/{animal1}_vs_{animal2}.pickle` (distance) and `alignment/{animal1}_vs_{animal2}.pickle` (alignment, optionally). The data is serialized using Pickle.
+The output is saved in `distance/{animal1}_vs_{animal2}.pickle` (dissimilarity) and `alignment/{animal1}_vs_{animal2}.pickle` (alignment, optionally). The data is serialized using Pickle.
 
-In order to generate the pairwise distance matrix, one must execute all pairwise distances. By running `python3 utils/generate-parallel-distance.py` a file `parallel_distance.txt` is created. The file contains the list of commands to be run to compute the pairwise alignments (all commands can be run in parallel). Once all distances have been computed, one can aggregate the data and create the pairwise distance matrix `alignment-matrices/dissimilarity-matrix.csv` by running `python3 utils/aggregate-distances.py`.
+In order to generate the pairwise dissimilarity matrix, one must execute all pairwise dissimilarities. By running `python3 utils/generate-parallel-distance.py` a file `parallel_distance.txt` is created. The file contains the list of commands to be run to compute the pairwise alignments (all commands can be run in parallel). Once all dissimilarities have been computed, one can aggregate the data and create the pairwise dissimilarity matrix `alignment-matrices/dissimilarity-matrix.csv` by running `python3 utils/aggregate-distances.py`.
 
 ## Pruning alignment dissimilarity matrix
 
