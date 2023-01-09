@@ -110,8 +110,8 @@ if __name__ == "__main__":
     parser.add_argument("-n", "--numberpoints", type=int, default=200, metavar="", help="Number of points for a brain")
     parser.add_argument("-d", "--degree", type=int, default=90, metavar="", help="Degrees of canonical rotations")
     parser.add_argument("-r", "--rotations", type=int, default=150, metavar="", help="Number of random rotations")
-    parser.add_argument("-a", "--coeffA", type=float, default=1, metavar="", help="Coefficient A (Euclidean) in the distance computation")
-    parser.add_argument("-b", "--coeffB", type=float, default=1, metavar="", help="Coefficient B (StrongestEdge) in the distance computation")
+    parser.add_argument("-a", "--coeffA", type=float, default=1, metavar="", help="Coefficient A (Euclidean) in the dissimilarity computation")
+    parser.add_argument("-b", "--coeffB", type=float, default=1, metavar="", help="Coefficient B (StrongestEdge) in the dissimilarity computation")
     parser.add_argument("-s", "--saveAlignment", action="store_true", help="Save alignment to file")
     args = parser.parse_args()
 
@@ -123,8 +123,8 @@ if __name__ == "__main__":
     (alignment, distance) = computeBrainAlignment(Xs, Ys, Xc, Yc, args)
     
     # write results to file
-    os.makedirs("distance", exist_ok=True)
-    with open(os.path.join("distance", f"{args.animal1}_vs_{args.animal2}.pickle"), "wb") as handle:
+    os.makedirs("dissimilarity", exist_ok=True)
+    with open(os.path.join("dissimilarity", f"{args.animal1}_vs_{args.animal2}.pickle"), "wb") as handle:
         pickle.dump(distance, handle)
     if args.saveAlignment:
         os.makedirs("alignment", exist_ok=True)
