@@ -62,7 +62,7 @@ If `pruned-dissimilarity_matrix.csv` is a pruned dissimilarity matrix obtained b
 
 ```python3 meerge-species.py -t pruned-dissimilarity_matrix```
 
-The output is saved in the folder `merging-results` and consists in a new dissimilarity matrix `merged-pruned-dissimilarity-matrix.csv`, which is the result of a merging procedure: it merges different individuals of the same species into an 'average' individual representing the species.
+The output is saved in the folder `merging-results` and consists in a new dissimilarity matrix `merged-pruned-dissimilarity-matrix.csv`, which is the result of a merging procedure: it merges different individuals of the same species into an 'average' individual representing the species. After the merge, the 'average' individuals are also renamed according to the file `./utils/map-of-animals.csv` (from the column `Common_name` to the column `Species`).
 
 Execute the following command for a summary of the script functionalities:
 
